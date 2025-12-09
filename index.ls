@@ -10,7 +10,9 @@ stop-by = null
 delay = 60000
 audio-remind = null
 audio-end = null
-wave = null
+wave-path = null
+wave-level = 1
+wave-raf = null
 
 new-audio = (file) ->
   node = new Audio!
@@ -39,11 +41,29 @@ format-time = (ms) ->
     else "#{v}"
   "#{pad2 hours}:#{pad2 minutes}:#{pad2 seconds}.#{pad3 milliseconds}"
 
+draw-wave = ->
+  return unless wave-path
+  width = window.innerWidth
+  height = window.innerHeight
+  base = Math.max 0, Math.min(height, height * wave-level)
+  amplitude = Math.max 12, Math.min(height * 0.08, 80)
+  wavelength = Math.max 120, width / 6
+  offset = Date.now! / 600
+  step = wavelength / 2
+  path = "M0 #{height}"
+  for x from -wavelength to width + wavelength by step
+    wave-y = base - Math.sin(x / wavelength * Math.PI * 2 + offset) * amplitude
+    path += " L#{x} #{wave-y}"
+  path += " L#{width} #{height} Z"
+  wave-path.setAttribute \d, path
+  wave-raf := requestAnimationFrame draw-wave
+
 update-wave = (ms) ->
-  return unless wave
+  return unless wave-path
   ratio = if delay <= 0 => 0 else Math.max(0, ms) / delay
   ratio = Math.min ratio, 1
-  wave.style.height = "#{ratio * 100}%"
+  wave-level := ratio
+  unless wave-raf => wave-raf := requestAnimationFrame draw-wave
 
 update-display = (ms) ->
   $ \#timer .text format-time ms
@@ -132,10 +152,13 @@ resize = ->
 
 
 window.onload = ->
-  wave := document.getElementById \wave
+  wave-path := document.getElementById \wave-path
   update-display delay
   #audio-remind := new-audio \audio/cop-car.mp3
   #audio-end := new-audio \audio/fire-alarm.mp3
   audio-remind := new-audio \audio/smb_warning.mp3
   audio-end := new-audio \audio/smb_mariodie.mp3
-window.onresize = -> resize!
+window.onresize = ->
+  resize!
+  if wave-raf => cancelAnimationFrame wave-raf
+  wave-raf := requestAnimationFrame draw-wave

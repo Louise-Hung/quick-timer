@@ -10,8 +10,9 @@
 </head>
 <body>
   <div id="wave">
-    <div class="wave-layer front"></div>
-    <div class="wave-layer back"></div>
+    <svg id="wave-svg" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+      <path id="wave-path"></path>
+    </svg>
   </div>
   <div id="timer">00:00:00.000</div>
   <a class="btn btn-info fbtn" id="min60" onclick="adjust(-60)">-60</a>
