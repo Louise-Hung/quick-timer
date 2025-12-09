@@ -13,7 +13,7 @@ delay = 60000;
 audioRemind = null;
 audioEnd = null;
 wavePath = null;
-waveLevel = 1;
+waveLevel = 0;
 waveRaf = null;
 newAudio = function(file){
   var x$, node;
@@ -61,7 +61,7 @@ formatTime = function(ms){
   return pad2(hours) + ":" + pad2(minutes) + ":" + pad2(seconds) + "." + pad3(milliseconds);
 };
 drawWave = function(){
-  var width, height, base, amplitude, wavelength, offset, step, path, i$, x$, waveY;
+  var width, height, base, amplitude, wavelength, offset, step, startX, prevX, prevY, path, i$, x$, waveY, ctrlX;
   if (!wavePath) {
     return;
   }
@@ -72,23 +72,28 @@ drawWave = function(){
   wavelength = Math.max(120, width / 6);
   offset = Date.now() / 600;
   step = wavelength / 2;
-  path = "M0 " + height;
-  for (i$ = -wavelength; i$ <= (x$ = width + wavelength); i$ += step) {
+  startX = -wavelength;
+  prevX = startX;
+  prevY = base - Math.sin(prevX / wavelength * Math.PI * 2 + offset) * amplitude;
+  path = "M0 " + height + " L" + startX + " " + height + " L" + prevX + " " + prevY;
+  for (i$ = startX + step; i$ <= (x$ = width + wavelength); i$ += step) {
     waveY = base - Math.sin(i$ / wavelength * Math.PI * 2 + offset) * amplitude;
-    path += " L" + i$ + " " + waveY;
+    ctrlX = prevX + step / 2;
+    path += " C" + ctrlX + " " + prevY + ", " + ctrlX + " " + waveY + ", " + i$ + " " + waveY;
+    prevX = i$;
+    prevY = waveY;
   }
-  path += " L" + width + " " + height + " Z";
+  path += " L" + (width + wavelength) + " " + height + " L0 " + height + " Z";
   wavePath.setAttribute('d', path);
   return waveRaf = requestAnimationFrame(drawWave);
 };
 updateWave = function(ms){
-  var ratio;
+  var remain;
   if (!wavePath) {
     return;
   }
-  ratio = delay <= 0 ? 0 : Math.max(0, ms) / delay;
-  ratio = Math.min(ratio, 1);
-  waveLevel = ratio;
+  remain = delay <= 0 ? 0 : Math.max(0, Math.min(ms, delay)) / delay;
+  waveLevel = 1 - remain;
   if (!waveRaf) {
     return waveRaf = requestAnimationFrame(drawWave);
   }

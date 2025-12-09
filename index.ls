@@ -11,7 +11,7 @@ delay = 60000
 audio-remind = null
 audio-end = null
 wave-path = null
-wave-level = 1
+wave-level = 0
 wave-raf = null
 
 new-audio = (file) ->
@@ -50,19 +50,24 @@ draw-wave = ->
   wavelength = Math.max 120, width / 6
   offset = Date.now! / 600
   step = wavelength / 2
-  path = "M0 #{height}"
-  for x from -wavelength to width + wavelength by step
+  start-x = -wavelength
+  prev-x = start-x
+  prev-y = base - Math.sin(prev-x / wavelength * Math.PI * 2 + offset) * amplitude
+  path = "M0 #{height} L#{start-x} #{height} L#{prev-x} #{prev-y}"
+  for x from start-x + step to width + wavelength by step
     wave-y = base - Math.sin(x / wavelength * Math.PI * 2 + offset) * amplitude
-    path += " L#{x} #{wave-y}"
-  path += " L#{width} #{height} Z"
+    ctrl-x = prev-x + step / 2
+    path += " C#{ctrl-x} #{prev-y}, #{ctrl-x} #{wave-y}, #{x} #{wave-y}"
+    prev-x = x
+    prev-y = wave-y
+  path += " L#{width + wavelength} #{height} L0 #{height} Z"
   wave-path.setAttribute \d, path
   wave-raf := requestAnimationFrame draw-wave
 
 update-wave = (ms) ->
   return unless wave-path
-  ratio = if delay <= 0 => 0 else Math.max(0, ms) / delay
-  ratio = Math.min ratio, 1
-  wave-level := ratio
+  remain = if delay <= 0 => 0 else Math.max(0, Math.min(ms, delay)) / delay
+  wave-level := 1 - remain
   unless wave-raf => wave-raf := requestAnimationFrame draw-wave
 
 update-display = (ms) ->
