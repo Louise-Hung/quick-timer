@@ -10,6 +10,7 @@ stop-by = null
 delay = 60000
 audio-remind = null
 audio-end = null
+wave = null
 
 new-audio = (file) ->
   node = new Audio!
@@ -25,6 +26,30 @@ sound-toggle = (des, state) ->
     ..currentTime = 0
     ..pause!
 
+format-time = (ms) ->
+  remain = Math.max 0, Math.floor ms
+  hours = Math.floor(remain / 3600000)
+  minutes = Math.floor(remain / 60000) % 60
+  seconds = Math.floor(remain / 1000) % 60
+  milliseconds = remain % 1000
+  pad2 = (v) -> if v < 10 => "0#{v}" else "#{v}"
+  pad3 = (v) ->
+    if v < 10 => "00#{v}"
+    else if v < 100 => "0#{v}"
+    else "#{v}"
+  "#{pad2 hours}:#{pad2 minutes}:#{pad2 seconds}.#{pad3 milliseconds}"
+
+update-wave = (ms) ->
+  return unless wave
+  ratio = if delay <= 0 => 0 else Math.max(0, ms) / delay
+  ratio = Math.min ratio, 1
+  wave.style.height = "#{ratio * 100}%"
+
+update-display = (ms) ->
+  $ \#timer .text format-time ms
+  update-wave ms
+  resize!
+
 show = ->
   is-show := !is-show
   $ \.fbtn .css \opacity, if is-show => \1.0 else \0.1
@@ -34,8 +59,8 @@ adjust = (it,v) ->
   delay := delay + it * 1000
   if it==0 => delay := v * 1000
   if delay <= 0 => delay := 0
-  $ \#timer .text delay
-  resize!
+  current = if start? => start.getTime! - (new Date!)getTime! + delay + latency else delay
+  update-display current
 
 toggle = ->
   is-run := !is-run
@@ -63,9 +88,8 @@ reset = ->
   toggle!
   if handler => clearInterval handler
   handler := null
-  $ \#timer .text delay
   $ \#timer .css \color, \#fff
-  resize!
+  update-display delay
 
 
 blink = ->
@@ -74,7 +98,6 @@ blink = ->
   $ \#timer .css \color, if is-light => \#fff else \#f00
 
 count = ->
-  tm = $ \#timer
   diff = start.getTime! - (new Date!)getTime! + delay + latency
   if diff > 60000 => is-warned := false
   if diff < 60000 and !is-warned =>
@@ -87,8 +110,7 @@ count = ->
     diff = 0
     clearInterval handler
     handler := setInterval ( -> blink!), 500
-  tm.text "#{diff}"
-  resize!
+  update-display diff
 
 run =  ->
   if start == null =>
@@ -105,13 +127,13 @@ resize = ->
   h = $ window .height!
   len = tm.text!length
   len>?=3
-  tm.css \font-size, "#{1.5 * w/len}px"
+  tm.css \font-size, "#{1.2 * w/len}px"
   tm.css \line-height, "#{h}px"
 
 
 window.onload = ->
-  $ \#timer .text delay
-  resize!
+  wave := document.getElementById \wave
+  update-display delay
   #audio-remind := new-audio \audio/cop-car.mp3
   #audio-end := new-audio \audio/fire-alarm.mp3
   audio-remind := new-audio \audio/smb_warning.mp3
