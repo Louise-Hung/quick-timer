@@ -8,7 +8,10 @@ html
     script(type="text/javascript",src="bootstrap3.min.js")
     script(type="text/javascript",src="index.js")
   body
-    #timer ????
+  #wave
+    svg#wave-svg(xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none")
+      path#wave-path
+    #timer 00:00:00.000
     a#min60.btn.btn-info.fbtn(onclick="adjust(-60)") -60
     a#min10.btn.btn-info.fbtn(onclick="adjust(-10)") -10
     a#toggle.btn.btn-primary(onclick="toggle()") RUN

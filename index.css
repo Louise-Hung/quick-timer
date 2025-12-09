@@ -10,16 +10,46 @@ body {
   -moz-user-select: moz-none;
   -ms-user-select: none;
   user-select: none;
+  background: #000;
 }
-#timer {
+body {
+  position: relative;
+  overflow: hidden;
+}
+#wave {
+  position: absolute;
+  left: 0;
+  bottom: 0;
   width: 100%;
   height: 100%;
-  line-height: 100%;
-  background: #000;
+  overflow: hidden;
+  z-index: 1;
+}
+
+#wave-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#wave-path {
+  fill: #9ad4ff;
+}
+
+#timer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
   color: #fff;
   text-align: center;
   font-weight: 700;
   font-family: century gothic;
+  z-index: 2;
 }
 #hide,
 #toggle,
@@ -43,6 +73,7 @@ body {
   width: 170px;
   height: 44px;
   line-height: 30px;
+  z-index: 3;
 }
 #reset {
   margin-left: 50px;
